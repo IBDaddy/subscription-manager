@@ -9,13 +9,21 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="サブスク管理">
   <title>サブスク管理</title>
+  
+  <!-- マニフェストファイルの読み込み -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- ライブラリの読み込み（順序が重要です） -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- ★★★ 修正箇所: Rechartsに必要な部品(prop-types)を追加 ★★★ -->
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.js"></script>
+
   <style>
     * { -webkit-tap-highlight-color: transparent; }
     body { overscroll-behavior: none; }
@@ -479,7 +487,12 @@
 
     // Service Worker 登録
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(console.error);
+      // プレビュー環境(blob:)やローカルファイル(file:)では動作しないためチェックを追加
+      if (['http:', 'https:'].includes(window.location.protocol)) {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => console.log('SW registered'))
+          .catch(error => console.log('SW registration failed:', error));
+      }
     }
 
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
