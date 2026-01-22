@@ -23,7 +23,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Recharts (グラフ描画) & prop-types -->
-  <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.js"></script>
+  <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
   <script crossorigin src="https://unpkg.com/recharts@2.10.3/dist/Recharts.js"></script>
   
   <style>
@@ -587,7 +587,7 @@
     // Service Worker 登録
     if ('serviceWorker' in navigator) {
       if (['http:', 'https:'].includes(window.location.protocol)) {
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('/sw.js')
           .then(registration => console.log('SW registered'))
           .catch(error => console.log('SW registration failed:', error));
       }
