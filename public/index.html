@@ -98,6 +98,7 @@
       const [showForm, setShowForm] = useState(false);
       const [editingId, setEditingId] = useState(null);
       const [activeTab, setActiveTab] = useState('list');
+      const [displayMode, setDisplayMode] = useState('monthly'); // 'monthly' or 'yearly'
 
       const [formData, setFormData] = useState({
         name: '', amount: '', cycle: 'monthly', nextBilling: '', category: 'その他',
@@ -142,6 +143,12 @@
         if (score >= 3) return { label: '要確認', color: 'bg-amber-100 text-amber-700' };
         if (score >= 2) return { label: '様子見', color: 'bg-yellow-100 text-yellow-700' };
         return { label: '継続', color: 'bg-emerald-100 text-emerald-700' };
+      };
+
+      const getCardBackground = (score) => {
+        if (score >= 4) return 'linear-gradient(135deg, #fff5f5 0%, #ffe4e6 100%)';
+        if (score >= 3) return 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)';
+        return 'white';
       };
 
       const activeSubs = subscriptions.filter(s => s.isActive);
@@ -266,15 +273,31 @@
                 </button>
               </div>
 
+              {/* Display Mode Toggle */}
+              <div className="flex justify-center gap-1 mb-3">
+                <button
+                  onClick={() => setDisplayMode('monthly')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors ${displayMode === 'monthly' ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  月額表示
+                </button>
+                <button
+                  onClick={() => setDisplayMode('yearly')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors ${displayMode === 'yearly' ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  年額表示
+                </button>
+              </div>
+
               {/* Stats */}
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="bg-slate-100 rounded-xl p-3">
-                  <p className="text-slate-600 text-xs">月額合計</p>
-                  <p className="text-lg font-bold text-slate-800">¥{totalMonthly.toLocaleString()}</p>
+                  <p className="text-slate-600 text-xs">{displayMode === 'monthly' ? '月額' : '年額'}合計</p>
+                  <p className="text-lg font-bold text-slate-800">¥{(displayMode === 'monthly' ? totalMonthly : totalYearly).toLocaleString()}</p>
                 </div>
                 <div className="bg-blue-50 rounded-xl p-3">
-                  <p className="text-blue-600 text-xs">年額合計</p>
-                  <p className="text-lg font-bold text-blue-800">¥{totalYearly.toLocaleString()}</p>
+                  <p className="text-blue-600 text-xs">{displayMode === 'monthly' ? '年間' : '月換算'}試算</p>
+                  <p className="text-lg font-bold text-blue-800">¥{(displayMode === 'monthly' ? totalYearly : Math.round(totalYearly / 12)).toLocaleString()}</p>
                 </div>
                 <div className="bg-emerald-50 rounded-xl p-3">
                   <p className="text-emerald-600 text-xs">契約中</p>
@@ -282,36 +305,10 @@
                 </div>
                 <div className="bg-rose-50 rounded-xl p-3">
                   <p className="text-rose-600 text-xs">💡 削減可能</p>
-                  <p className="text-lg font-bold text-rose-800">¥{potentialSavings.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-rose-800">¥{(displayMode === 'monthly' ? potentialSavings : potentialSavings * 12).toLocaleString()}</p>
                 </div>
               </div>
 
-              {/* Form */}
-              {showForm && (
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="サービス名" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="col-span-2 px-3 py-2 border rounded-lg text-sm" required />
-                    <input type="text" inputMode="numeric" placeholder="金額" value={formData.amount} onChange={(e) => { const val = e.target.value.replace(/[^\d]/g, ''); setFormData({...formData, amount: val === '' ? '' : Math.max(0, parseInt(val)) }); }} className="px-3 py-2 border rounded-lg text-sm" required />
-                    <select value={formData.cycle} onChange={(e) => setFormData({...formData, cycle: e.target.value})} className="px-3 py-2 border rounded-lg text-sm">
-                      <option value="monthly">月額</option>
-                      <option value="yearly">年額</option>
-                    </select>
-                    <input type="date" value={formData.nextBilling} onChange={(e) => setFormData({...formData, nextBilling: e.target.value})} className="px-3 py-2 border rounded-lg text-sm" required />
-                    <select value={formData.category} onChange={(e) => { const cat = e.target.value; setFormData({...formData, category: cat, color: colors[categories.indexOf(cat)] || '#06b6d4'}); }} className="px-3 py-2 border rounded-lg text-sm">
-                      {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <select value={formData.satisfaction} onChange={(e) => setFormData({...formData, satisfaction: e.target.value})} className="col-span-2 px-3 py-2 border rounded-lg text-sm">
-                      {satisfactionLevels.map(s => <option key={s} value={s}>満足度: {s}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex gap-1 mt-2 flex-wrap">
-                    {frequencyLevels.map(f => (
-                      <button key={f} type="button" onClick={() => setFormData({...formData, frequency: f})} className={`px-2 py-1 rounded text-xs ${formData.frequency === f ? 'bg-slate-700 text-white' : 'bg-white border'}`}>{f}</button>
-                    ))}
-                  </div>
-                  <button onClick={handleSubmit} className="mt-2 w-full bg-slate-700 text-white py-2 rounded-lg text-sm">{editingId ? '更新' : '追加'}</button>
-                </div>
-              )}
             </div>
 
             {/* Content */}
@@ -322,30 +319,34 @@
                   <div className="space-y-2">
                     {sortedSubs.map(sub => {
                       const days = getDaysUntilBilling(sub.nextBilling);
-                      const rec = getCancelRecommendation(getCancelScore(sub));
+                      const score = getCancelScore(sub);
+                      const rec = getCancelRecommendation(score);
                       return (
-                        <div key={sub.id} className="border rounded-xl p-3" style={{ borderLeftWidth: 4, borderLeftColor: sub.color }}>
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1 flex-wrap mb-1">
-                                <span className="font-semibold text-sm truncate">{sub.name}</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded-full ${rec.color}`}>{rec.label}</span>
-                              </div>
-                              <div className="text-sm text-gray-600">
+                        <div key={sub.id} className="border rounded-xl p-3 transition-all" style={{ borderLeftWidth: 4, borderLeftColor: sub.color, background: getCardBackground(score) }}>
+                          {/* Top row: Name | Days | Badge */}
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-semibold text-sm truncate flex-shrink">{sub.name}</span>
+                            <span className={`text-xs px-2 py-1 ${getUrgencyColor(days)} text-white rounded font-medium mx-2 whitespace-nowrap`}>
+                              {days < 0 ? '期限切れ' : days === 0 ? '今日' : `${days}日後`}
+                            </span>
+                            <span className={`text-xs px-2 py-1 rounded-full ${rec.color} font-medium whitespace-nowrap`}>{rec.label}</span>
+                          </div>
+                          {/* Bottom row: Amount & Details | Actions */}
+                          <div className="flex justify-between items-center">
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-gray-900">
                                 ¥{sub.amount.toLocaleString()}/{sub.cycle === 'monthly' ? '月' : '年'}
                               </div>
-                              <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 flex-wrap">
-                                <span className={`px-1.5 py-0.5 ${getUrgencyColor(days)} text-white rounded`}>
-                                  {days < 0 ? '期限切れ' : days === 0 ? '今日' : `${days}日後`}
-                                </span>
-                                <span>満足:{sub.satisfaction}</span>
-                                <span>頻度:{sub.frequency}</span>
+                              <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-600">
+                                <span>満足度:{sub.satisfaction}</span>
+                                <span>•</span>
+                                <span>使用:{sub.frequency}</span>
                               </div>
                             </div>
                             <div className="flex gap-0.5 ml-2">
-                              <button onClick={() => toggleStatus(sub.id)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded"><Pause size={16} /></button>
-                              <button onClick={() => handleEdit(sub)} className="p-1.5 text-slate-600 hover:bg-slate-50 rounded"><Edit2 size={16} /></button>
-                              <button onClick={() => handleDelete(sub.id)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded"><Trash2 size={16} /></button>
+                              <button onClick={() => toggleStatus(sub.id)} className="p-1.5 text-amber-600 hover:bg-amber-50 rounded" title="停止"><Pause size={16} /></button>
+                              <button onClick={() => handleEdit(sub)} className="p-1.5 text-slate-600 hover:bg-slate-50 rounded" title="編集"><Edit2 size={16} /></button>
+                              <button onClick={() => handleDelete(sub.id)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded" title="削除"><Trash2 size={16} /></button>
                             </div>
                           </div>
                         </div>
@@ -459,20 +460,38 @@
                   </div>
                 )}
 
-                {/* History */}
+                {/* History - Timeline */}
                 {activeTab === 'history' && (
-                  <div className="space-y-2">
-                    {history.length > 0 ? history.slice(0, 20).map(h => (
-                      <div key={h.id} className={`rounded-lg p-2 text-sm ${h.action === '解約' ? 'bg-amber-50' : h.action === '再契約' ? 'bg-emerald-50' : 'bg-blue-50'}`}>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${h.action === '解約' ? 'bg-amber-200 text-amber-800' : h.action === '再契約' ? 'bg-emerald-200 text-emerald-800' : 'bg-blue-200 text-blue-800'}`}>{h.action}</span>
-                            <span className="font-medium">{h.subName}</span>
+                  <div className="relative">
+                    {history.length > 0 ? (
+                      <div className="relative">
+                        {/* Timeline line */}
+                        <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                        {history.slice(0, 20).map((h, idx) => (
+                          <div key={h.id} className="relative pl-10 pb-4">
+                            {/* Timeline dot */}
+                            <div className={`absolute left-1.5 top-1 w-3 h-3 rounded-full ${h.action === '解約' ? 'bg-amber-400' : h.action === '再契約' ? 'bg-emerald-400' : 'bg-blue-400'}`}></div>
+                            {/* Content */}
+                            <div className="bg-white rounded-lg p-3 shadow-sm border">
+                              <div className="flex justify-between items-start mb-1">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${h.action === '解約' ? 'bg-amber-100 text-amber-800' : h.action === '再契約' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}`}>
+                                    {h.action}
+                                  </span>
+                                  <span className="font-semibold text-sm">{h.subName}</span>
+                                </div>
+                                <span className="text-gray-400 text-xs">{h.date}</span>
+                              </div>
+                              <p className="text-gray-500 text-xs">
+                                ¥{h.amount.toLocaleString()} / {h.cycle === 'monthly' ? '月' : '年'}
+                              </p>
+                            </div>
                           </div>
-                          <span className="text-gray-500 text-xs">{h.date}</span>
-                        </div>
+                        ))}
                       </div>
-                    )) : <p className="text-center text-gray-400 py-8 text-sm">履歴がありません</p>}
+                    ) : (
+                      <p className="text-center text-gray-400 py-8 text-sm">履歴がありません</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -480,7 +499,7 @@
           </div>
 
           {/* Bottom Navigation */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-10">
             <div className="max-w-lg mx-auto flex">
               {[
                 { id: 'list', label: '一覧', icon: '📋' },
@@ -495,6 +514,66 @@
               ))}
             </div>
           </div>
+
+          {/* Modal Form */}
+          {showForm && (
+            <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" onClick={resetForm}>
+              <div className="bg-white rounded-2xl p-5 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold text-gray-900">{editingId ? 'サブスク編集' : 'サブスク追加'}</h2>
+                  <button onClick={resetForm} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">サービス名 *</label>
+                    <input type="text" placeholder="Netflix" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent" required />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">金額 *</label>
+                      <input type="text" inputMode="numeric" placeholder="1980" value={formData.amount} onChange={(e) => { const val = e.target.value.replace(/[^\d]/g, ''); setFormData({...formData, amount: val === '' ? '' : Math.max(0, Number(val)) }); }} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">周期</label>
+                      <select value={formData.cycle} onChange={(e) => setFormData({...formData, cycle: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent">
+                        <option value="monthly">月額</option>
+                        <option value="yearly">年額</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">次回請求日 *</label>
+                      <input type="date" value={formData.nextBilling} onChange={(e) => setFormData({...formData, nextBilling: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">カテゴリ</label>
+                      <select value={formData.category} onChange={(e) => { const cat = e.target.value; setFormData({...formData, category: cat, color: colors[categories.indexOf(cat)] || '#06b6d4'}); }} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent">
+                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">満足度</label>
+                    <select value={formData.satisfaction} onChange={(e) => setFormData({...formData, satisfaction: e.target.value})} className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent">
+                      {satisfactionLevels.map(s => <option key={s} value={s}>満足度: {s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">使用頻度</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {frequencyLevels.map(f => (
+                        <button key={f} type="button" onClick={() => setFormData({...formData, frequency: f})} className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${formData.frequency === f ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{f}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={handleSubmit} className="mt-4 w-full bg-slate-700 hover:bg-slate-800 text-white py-3 rounded-lg text-sm font-medium transition-colors">
+                    {editingId ? '更新する' : '追加する'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
