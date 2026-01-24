@@ -22,10 +22,10 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Recharts (グラフ描画) & prop-types -->
-  <script crossorigin src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-is@18/umd/react-is.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <!-- Recharts (グラフ描画) & prop-types via jsDelivr -->
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/prop-types@15.8.1/prop-types.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-is@18.3.1/umd/react-is.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
   
   <style>
     * { -webkit-tap-highlight-color: transparent; }
@@ -224,12 +224,11 @@
       const toggleStatus = (id) => {
         const sub = subscriptions.find(s => s.id === id);
         const newStatus = !sub.isActive;
-        setHistory([{ id: Date.now(), subId: id, subName: sub.name, action: newStatus ? '再契約' : '解約', date: new Date().toISOString().split('T')[0], amount: sub.amount, cycle: sub.cycle }, ...history]);
+        setHistory([{ id: Date.now() + Math.random(), subId: id, subName: sub.name, action: newStatus ? '再契約' : '解約', date: new Date().toISOString().split('T')[0], amount: sub.amount, cycle: sub.cycle }, ...history]);
         setSubscriptions(subscriptions.map(s => s.id === id ? { ...s, isActive: newStatus } : s));
       };
 
-      const handleSubmit = (e) => {
-        e.preventDefault();
+      const handleSubmit = () => {
         // 入力値の検証
         if (!formData.name || !formData.name.trim()) {
           alert('サービス名を入力してください');
@@ -243,23 +242,23 @@
           alert('次回請求日を入力してください');
           return;
         }
-        
-        const numAmount = typeof formData.amount === 'string' ? parseInt(formData.amount) : formData.amount;
+
+        const numAmount = typeof formData.amount === 'string' ? Number(formData.amount) : formData.amount;
         const validatedData = { ...formData, amount: numAmount };
-        
+
         if (editingId) {
           setSubscriptions(subscriptions.map(sub => sub.id === editingId ? { ...validatedData, id: editingId } : sub));
           setEditingId(null);
         } else {
-          const newSub = { ...validatedData, id: Date.now() };
+          const newSub = { ...validatedData, id: Date.now() + Math.random() };
           setSubscriptions([...subscriptions, newSub]);
-          setHistory([{ id: Date.now(), subId: newSub.id, subName: newSub.name, action: '新規契約', date: new Date().toISOString().split('T')[0], amount: newSub.amount, cycle: newSub.cycle }, ...history]);
+          setHistory([{ id: Date.now() + Math.random(), subId: newSub.id, subName: newSub.name, action: '新規契約', date: new Date().toISOString().split('T')[0], amount: newSub.amount, cycle: newSub.cycle }, ...history]);
         }
         resetForm();
       };
 
       const handleEdit = (sub) => {
-        setFormData(sub);
+        setFormData({ ...sub });
         setEditingId(sub.id);
         setShowForm(true);
         setActiveTab('list');
@@ -285,7 +284,7 @@
           return (
             <div className="bg-white p-2 border rounded shadow-lg text-sm">
               <p className="font-medium">{payload[0].name}</p>
-              <p className="text-gray-600">¥{payload[0].value.toLocaleString()}/月</p>
+              <p className="text-gray-600">月換算 ¥{payload[0].value.toLocaleString()}</p>
             </div>
           );
         }
