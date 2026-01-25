@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subsco Icon Generator</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f4;
+    }
+    .preview {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    .preview-item {
+      text-align: center;
+    }
+    canvas {
+      border: 1px solid #e7e5e4;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.1);
+    }
+    button {
+      background: #57534e;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #44403c;
+    }
+    .info {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      border: 1px solid #e7e5e4;
+    }
+  </style>
+</head>
+<body>
+  <h1>Subsco Icon Generator</h1>
+  <div class="info">
+    <p>Nordic風のシンプルで洗練されたSubscoアイコンを生成します。</p>
+    <p>下のボタンをクリックしてアイコンをダウンロードしてください。</p>
+  </div>
+
+  <div class="preview">
+    <div class="preview-item">
+      <p>192x192</p>
+      <canvas id="canvas192" width="192" height="192"></canvas>
+      <br>
+      <button onclick="downloadIcon(192)">Download 192x192</button>
+    </div>
+    <div class="preview-item">
+      <p>512x512</p>
+      <canvas id="canvas512" width="512" height="512"></canvas>
+      <br>
+      <button onclick="downloadIcon(512)">Download 512x512</button>
+    </div>
+  </div>
+
+  <script>
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      const scale = size / 192;
+
+      // Background - warm white with gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#fdfcf8');
+      gradient.addColorStop(1, '#f5f5f4');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+
+      // Border radius effect (subtle shadow)
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.05)';
+      ctx.shadowBlur = 10 * scale;
+
+      // Main circle background
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const radius = size * 0.35;
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#57534e'; // stone-600
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+
+      // Letter "S" - modern, geometric style
+      ctx.font = `bold ${size * 0.5}px "Helvetica Neue", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('S', centerX, centerY + size * 0.02);
+
+      // Accent dot (lime)
+      const dotRadius = size * 0.045;
+      const dotX = centerX + size * 0.22;
+      const dotY = centerY - size * 0.22;
+
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#84cc16'; // lime-500
+      ctx.fill();
+    }
+
+    function downloadIcon(size) {
+      const canvas = document.getElementById(`canvas${size}`);
+      const link = document.createElement('a');
+      link.download = `icon-${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Generate icons on load
+    window.onload = () => {
+      drawIcon(document.getElementById('canvas192'), 192);
+      drawIcon(document.getElementById('canvas512'), 512);
+    };
+  </script>
+</body>
+</html>
