@@ -47,14 +47,25 @@
       margin: 20px 0;
       border: 1px solid #e7e5e4;
     }
+    .auto-download {
+      background: #84cc16;
+      color: #1c1917;
+    }
+    .auto-download:hover {
+      background: #65a30d;
+    }
   </style>
 </head>
 <body>
   <h1>Subsco Icon Generator</h1>
   <div class="info">
     <p>Nordic風のシンプルで洗練されたSubscoアイコンを生成します。</p>
-    <p>下のボタンをクリックしてアイコンをダウンロードしてください。</p>
+    <p><strong>「自動生成＆保存」をクリックすると、2つのアイコンが自動でダウンロードされます。</strong></p>
   </div>
+
+  <button class="auto-download" onclick="autoGenerateAll()" style="font-size: 16px; padding: 16px 32px; margin-bottom: 20px;">
+    🚀 自動生成＆保存
+  </button>
 
   <div class="preview">
     <div class="preview-item">
@@ -74,7 +85,6 @@
   <script>
     function drawIcon(canvas, size) {
       const ctx = canvas.getContext('2d');
-      const scale = size / 192;
 
       // Background - warm white with gradient
       const gradient = ctx.createLinearGradient(0, 0, size, size);
@@ -82,10 +92,6 @@
       gradient.addColorStop(1, '#f5f5f4');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, size, size);
-
-      // Border radius effect (subtle shadow)
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.05)';
-      ctx.shadowBlur = 10 * scale;
 
       // Main circle background
       const centerX = size / 2;
@@ -96,10 +102,9 @@
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
       ctx.fillStyle = '#57534e'; // stone-600
       ctx.fill();
-      ctx.shadowColor = 'transparent';
 
       // Letter "S" - modern, geometric style
-      ctx.font = `bold ${size * 0.5}px "Helvetica Neue", sans-serif`;
+      ctx.font = `bold ${size * 0.55}px "Helvetica Neue", Arial, sans-serif`;
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -122,6 +127,14 @@
       link.download = `icon-${size}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
+    }
+
+    function autoGenerateAll() {
+      // 少し遅延させて順番にダウンロード
+      setTimeout(() => downloadIcon(192), 100);
+      setTimeout(() => downloadIcon(512), 500);
+
+      alert('✅ アイコンを生成しました！\n\nダウンロードフォルダに icon-192.png と icon-512.png が保存されます。\n\nこれらのファイルを public/ フォルダにコピーしてください。');
     }
 
     // Generate icons on load

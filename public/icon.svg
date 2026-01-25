@@ -1,11 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#334155"/>
-  <g fill="white">
-    <rect x="80" y="120" width="160" height="120" rx="16" opacity="0.9"/>
-    <rect x="272" y="120" width="160" height="120" rx="16" opacity="0.6"/>
-    <rect x="80" y="272" width="160" height="120" rx="16" opacity="0.4"/>
-    <rect x="272" y="272" width="160" height="120" rx="16" opacity="0.2"/>
-  </g>
-  <circle cx="400" cy="400" r="80" fill="#10b981"/>
-  <path d="M370 400 L390 420 L430 380" stroke="white" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fdfcf8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5f5f4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Main circle -->
+  <circle cx="256" cy="256" r="179" fill="#57534e"/>
+
+  <!-- Letter S -->
+  <text x="256" y="305" font-family="Helvetica Neue, Arial, sans-serif" font-size="280" font-weight="bold" fill="#ffffff" text-anchor="middle">S</text>
+
+  <!-- Accent dot -->
+  <circle cx="368" cy="144" r="23" fill="#84cc16"/>
 </svg>
