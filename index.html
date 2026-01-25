@@ -5,7 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#334155">
   <meta name="description" content="サブスクリプションを満足度と使用頻度で管理し、解約タイミングを最適化">
-  
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- Open Graph / SNS Share -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Subsco - サブスク管理アプリ">
+  <meta property="og:description" content="サブスクリプションを満足度と使用頻度で管理し、解約タイミングを最適化">
+  <meta property="og:site_name" content="Subsco">
+  <meta property="og:locale" content="ja_JP">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Subsco - サブスク管理アプリ">
+  <meta name="twitter:description" content="サブスクリプションを満足度と使用頻度で管理し、解約タイミングを最適化">
+
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,6 +26,8 @@
   <title>Subsco</title>
   
   <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <!-- ========================================== -->
@@ -1033,7 +1048,7 @@
                   <button onClick={handleResetAll} className="w-full bg-rose-50 dark:bg-rose-900/20 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/50 flex items-center justify-between text-sm font-bold text-rose-600 hover:opacity-80 transition-colors mt-8">
                     <span className="flex items-center gap-3"><Icons.Trash2 size={18} /> {t('settings.reset')}</span>
                   </button>
-                  <p className="text-center text-[10px] text-skin-subtext mt-6">v8.2.1 Fixed Translation</p>
+                  <p className="text-center text-[10px] text-skin-subtext mt-6">v8.3.0 Improved Meta Tags</p>
                 </div>
               )}
             </div>
