@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#334155">
+  <meta name="description" content="サブスクリプションを満足度と使用頻度で管理し、解約タイミングを最適化">
+  <meta name="format-detection" content="telephone=no">
+
+  <!-- Open Graph / SNS Share -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Subsco - サブスク管理アプリ">
+  <meta property="og:description" content="サブスクリプションを満足度と使用頻度で管理し、解約タイミングを最適化">
+  <meta property="og:site_name" content="Subsco">
+  <meta property="og:locale" content="ja_JP">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Subsco - サブスク管理アプリ">
+  <meta name="twitter:description" content="サブスクリプションを満足度と使用頻度で管理し、解約タイミングを最適化">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Subsco">
+  <title>Subsco</title>
+  
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- ========================================== -->
+  <!-- Libraries (CDN) -->
+  <!-- ========================================== -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind Config -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            skin: {
+              base: 'var(--color-bg)',
+              card: 'var(--color-card)',
+              text: 'var(--color-text)',
+              subtext: 'var(--color-subtext)',
+              border: 'var(--color-border)',
+              primary: 'var(--color-primary)',
+              'primary-fg': 'var(--color-primary-fg)',
+              accent: 'var(--color-accent)',
+            }
+          },
+          borderRadius: {
+            skin: 'var(--radius)',
+          },
+          boxShadow: {
+            skin: 'var(--shadow)',
+          },
+          fontFamily: {
+            skin: 'var(--font-family)',
+          },
+          animation: {
+            'modal-in': 'modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+          },
+          keyframes: {
+            modalIn: {
+              '0%': { opacity: '0', transform: 'scale(0.95) translateY(10px)' },
+              '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+  
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { overscroll-behavior: none; }
+    
+    /* === テーマ定義 (デフォルトをNordic風に統一) === */
+    :root {
+      --color-bg: #fdfcf8;        /* warm white */
+      --color-card: #ffffff;      /* white */
+      --color-text: #44403c;      /* stone-700 */
+      --color-subtext: #a8a29e;   /* stone-400 */
+      --color-border: #e7e5e4;    /* stone-200 */
+      --color-primary: #57534e;   /* stone-600 */
+      --color-primary-fg: #ffffff;
+      --color-accent: #84cc16;    /* lime-500 */
+      --radius: 1.5rem;           /* rounded-3xl */
+      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+      --font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; /* ノルディックフォント */
+    }
+
+    /* Dark Mode */
+    .dark {
+      --color-bg: #1c1917;        /* stone-900 */
+      --color-card: #292524;      /* stone-800 */
+      --color-text: #f5f5f4;      /* stone-100 */
+      --color-subtext: #78716c;   /* stone-500 */
+      --color-border: #44403c;    /* stone-700 */
+      --color-primary: #a8a29e;   /* stone-400 */
+      --color-primary-fg: #1c1917;
+      --color-accent: #a3e635;    /* lime-400 */
+      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    }
+
+    /* タイムラインの線 */
+    .timeline-line::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 24px;
+      bottom: -16px;
+      width: 1px;
+      background-color: var(--color-border);
+    }
+    .timeline-line:last-child::before {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-skin-base text-skin-text font-skin transition-colors duration-300 selection:bg-skin-primary selection:text-skin-primary-fg">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+    const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } = Recharts;
+
+    // ==========================================
+    // 1. Translation Resources
+    // ==========================================
+    const TRANSLATIONS = {
+      ja: {
+        appTitle: 'Subsco',
+        appDesc: '満足度×頻度で最適化',
+        currency: '¥',
+        cycle: { monthly: '月額', yearly: '年額', mo: '月', yr: '年' },
+        tab: { list: '一覧', matrix: '分析', analysis: 'グラフ', history: '履歴', settings: '設定' },
+        stats: { total: '合計支出', active: '契約中', savings: '削減余地', items: '件' },
+        sort: { date: '更新が近い順', price: '金額が高い順', satisfaction: '満足度が低い順' },
+        card: { expired: '期限切れ', today: '今日請求', daysLeft: 'あと{days}日' },
+        status: { paused: '停止中', resume: '再開', stop: '停止' },
+        matrix: { axisX: '満足度', axisY: '頻度', description: '右下にあるサービスほど\n見直しの優先度が高いです' },
+        analysis: { 
+          budgetCheck: '家計負担率チェック', incomeLabel: '手取り月収を入力', ratio: '固定費率',
+          category: 'カテゴリ別', satisfaction: '満足度別', ranking: '支出ランキング (カテゴリ)'
+        },
+        history: { title: '活動履歴', noHistory: '履歴はありません', labels: { cancel: '解約', resume: '再契約', new: '新規契約' } },
+        settings: { 
+          theme: 'デザインテーマ', language: '言語 / Language',
+          backup: 'バックアップ', backupDesc: 'データをファイルに保存します。', btnBackup: 'データを保存',
+          restore: '復元', restoreDesc: '保存したファイルからデータを復元します。', restoreWarn: '※上書きされます', btnRestore: 'ファイルを選択',
+          reset: 'データ初期化', btnReset: 'すべてのデータを削除'
+        },
+        modal: {
+          add: '新規追加', edit: '編集', update: '更新する', addBtn: '追加する',
+          deleteTitle: '削除の確認', deleteMsg: '完全に削除しますか？履歴も削除されます。', deleteBtn: '削除',
+          resumeTitle: 'サービスの再開', resumeMsg: '再開後の金額を入力してください', resumeBtn: '再開する',
+          restoreTitle: 'データの復元', restoreMsg: 'バックアップデータを復元しますか？現在のデータは上書きされます。', restoreBtn: '復元する',
+          resetTitle: '初期化の確認', resetMsg: 'すべてのデータを削除しますか？この操作は取り消せません。', resetBtn: '削除する',
+          cancel: 'キャンセル'
+        },
+        form: {
+          name: 'サービス名', amount: '金額', cycle: 'サイクル', nextBilling: '次回請求',
+          category: 'カテゴリ', satisfaction: '満足度', frequency: '使用頻度',
+          placeholderName: '例: Netflix', placeholderAmount: '0'
+        },
+        dataMap: {
+          'エンタメ': 'エンタメ', '仕事': '仕事', '健康': '健康', '教育': '教育', '生活': '生活', 'その他': 'その他',
+          '高': '高', '中': '中', '低': '低',
+          '毎日': '毎日', '週1': '週1', '月1': '月1', 'ほぼ未使用': 'ほぼ未使用'
+        },
+        rec: {
+          cancel: '解約検討', check: '要確認', wait: '様子見', keep: '継続'
+        },
+        budget: {
+          great: '素晴らしい！余裕があります 💰',
+          good: '適正範囲内です ✅',
+          warning: '少し高いかも…見直し検討 🤔',
+          danger: '使いすぎの可能性！要見直し 🚨',
+          hint: '適正目安(5%):'
+        }
+      },
+      en: {
+        appTitle: 'Subsco',
+        appDesc: 'Optimize with Satisfaction x Frequency',
+        currency: '¥',
+        cycle: { monthly: 'Monthly', yearly: 'Yearly', mo: 'mo', yr: 'yr' },
+        tab: { list: 'List', matrix: 'Matrix', analysis: 'Charts', history: 'History', settings: 'Settings' },
+        stats: { total: 'Total Expenses', active: 'Active', savings: 'Potential Savings', items: '' },
+        sort: { date: 'Renew Date', price: 'Price: High to Low', satisfaction: 'Satisfaction: Low to High' },
+        card: { expired: 'Expired', today: 'Today', daysLeft: '{days} days' },
+        status: { paused: 'Paused', resume: 'Resume', stop: 'Stop' },
+        matrix: { axisX: 'Satisfaction', axisY: 'Frequency', description: 'Services in the bottom right\nare high priority for review' },
+        analysis: { 
+          budgetCheck: 'Budget Health Check', incomeLabel: 'Monthly Net Income', ratio: 'Fixed Cost Ratio',
+          category: 'By Category', satisfaction: 'By Satisfaction', ranking: 'Spending Ranking (Category)'
+        },
+        history: { title: 'Activity Log', noHistory: 'No History', labels: { cancel: 'Canceled', resume: 'Resumed', new: 'New' } },
+        settings: { 
+          theme: 'Theme', language: 'Language / 言語',
+          backup: 'Backup', backupDesc: 'Save data to a file.', btnBackup: 'Download Data',
+          restore: 'Restore', restoreDesc: 'Restore data from a file.', restoreWarn: '*Overwrites current data', btnRestore: 'Select File',
+          reset: 'Reset Data', btnReset: 'Delete All Data'
+        },
+        modal: {
+          add: 'New Service', edit: 'Edit Service', update: 'Update', addBtn: 'Add',
+          deleteTitle: 'Confirm Delete', deleteMsg: 'Are you sure you want to delete this? History will also be deleted.', deleteBtn: 'Delete',
+          resumeTitle: 'Resume Service', resumeMsg: 'Please enter the amount after resuming.', resumeBtn: 'Resume',
+          restoreTitle: 'Restore Data', restoreMsg: 'Do you want to restore backup data? Current data will be overwritten.', restoreBtn: 'Restore',
+          resetTitle: 'Confirm Reset', resetMsg: 'Are you sure you want to delete all data? This action cannot be undone.', resetBtn: 'Delete',
+          cancel: 'Cancel'
+        },
+        form: {
+          name: 'Service Name', amount: 'Amount', cycle: 'Cycle', nextBilling: 'Next Billing',
+          category: 'Category', satisfaction: 'Satisfaction', frequency: 'Frequency',
+          placeholderName: 'e.g. Netflix', placeholderAmount: '0'
+        },
+        dataMap: {
+          'エンタメ': 'Entertainment', '仕事': 'Work', '健康': 'Health', '教育': 'Education', '生活': 'Life', 'その他': 'Other',
+          '高': 'High', '中': 'Mid', '低': 'Low',
+          '毎日': 'Daily', '週1': 'Weekly', '月1': 'Monthly', 'ほぼ未使用': 'Rarely'
+        },
+        rec: {
+          cancel: 'Cancel?', check: 'Check', wait: 'Wait', keep: 'Keep'
+        },
+        budget: {
+          great: 'Great! You have budget to spare 💰',
+          good: 'Within reasonable range ✅',
+          warning: 'A bit high... Consider reviewing 🤔',
+          danger: 'Potential overspending! Review needed 🚨',
+          hint: 'Ideal (5%):'
+        }
+      }
+    };
+
+    // ==========================================
+    // 2. Constants & Presets
+    // ==========================================
+    const PRESETS = {
+      'Netflix': { amount: 1490, category: 'エンタメ', color: '#64748b' },
+      'Spotify': { amount: 980, category: 'エンタメ', color: '#10b981' },
+      'YouTube Premium': { amount: 1280, category: 'エンタメ', color: '#ef4444' },
+      'Amazon Prime': { amount: 600, category: '生活', color: '#0ea5e9' },
+      'Apple Music': { amount: 1080, category: 'エンタメ', color: '#f59e0b' },
+      'iCloud+': { amount: 130, category: '生活', color: '#0ea5e9' },
+      'ChatGPT Plus': { amount: 3000, category: '仕事', color: '#10b981' },
+      'Adobe CC': { amount: 7780, category: '仕事', color: '#ef4444' },
+      'DAZN': { amount: 4200, category: 'エンタメ', color: '#10b981' },
+    };
+
+    const DEFAULT_SUBSCRIPTIONS = [
+      { id: 1, name: 'Netflix', amount: 1490, cycle: 'monthly', nextBilling: '2026-02-20', category: 'エンタメ', color: '#64748b', satisfaction: '高', frequency: '週1', isActive: true },
+      { id: 2, name: 'Adobe CC', amount: 65760, cycle: 'yearly', nextBilling: '2026-03-15', category: '仕事', color: '#0ea5e9', satisfaction: '高', frequency: '毎日', isActive: true },
+    ];
+
+    const CATEGORIES = ['エンタメ', '仕事', '健康', '教育', '生活', 'その他'];
+    const COLOR_PALETTE = [
+      '#64748b', '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', 
+      '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'
+    ];
+    
+    const CATEGORY_COLORS = {
+      'エンタメ': '#f43f5e', '仕事': '#3b82f6', '健康': '#10b981', 
+      '教育': '#f59e0b', '生活': '#0ea5e9', 'その他': '#64748b'
+    };
+
+    const SATISFACTION_LEVELS = ['高', '中', '低'];
+    const SATISFACTION_COLORS = { '高': '#10b981', '中': '#f59e0b', '低': '#ef4444' };
+    const FREQUENCY_LEVELS = ['毎日', '週1', '月1', 'ほぼ未使用'];
+
+    // ==========================================
+    // 3. Components
+    // ==========================================
+    const Icons = {
+      Plus: ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+      Trash2: ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>,
+      Edit2: ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>,
+      Pause: ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
+      Play: ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
+      Download: ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+      Upload: ({ size = 20 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>,
+      Settings: ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>,
+      Wallet: ({ size = 20, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>,
+      ChevronDown: ({ size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>,
+      ChevronUp: ({ size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>,
+      X: ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+      List: ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
+      Matrix: ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>,
+      Chart: ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>,
+      History: ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
+      Globe: ({ size = 24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+    };
+
+    const Modal = ({ isOpen, onClose, title, children, footer, message, onConfirm, onCancel, confirmText, cancelText, isDanger, inputMode, inputValue, inputPlaceholder, onInputChange }) => {
+      if (!isOpen) return null;
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+          <div className="bg-skin-card rounded-skin shadow-skin w-full max-w-sm p-6 relative z-10 animate-modal-in border border-skin-border">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-skin-text tracking-wide">{title}</h3>
+              <button onClick={onClose} className="text-skin-subtext hover:text-skin-text transition-colors">
+                <Icons.X size={22} />
+              </button>
+            </div>
+            
+            {message && <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">{message}</p>}
+
+            {inputMode && (
+              <div className="mb-4">
+                <input 
+                  type="number" 
+                  value={inputValue} 
+                  onChange={onInputChange}
+                  placeholder={inputPlaceholder}
+                  className="w-full px-3 py-2 border rounded-lg text-sm bg-skin-base border-skin-border text-skin-text focus:outline-none focus:ring-2 focus:ring-skin-primary"
+                  autoFocus
+                />
+              </div>
+            )}
+            
+            {children}
+            
+            {(footer || onConfirm) && (
+              <div className="mt-8 flex justify-end gap-3">
+                {footer ? footer : (
+                  <>
+                    <button onClick={onCancel || onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-skin-subtext hover:bg-skin-base transition-colors">{cancelText}</button>
+                    <button onClick={onConfirm} className={`px-4 py-2 rounded-lg text-sm font-bold text-white shadow-sm transition-colors ${isDanger ? 'bg-rose-500 hover:bg-rose-600' : 'bg-skin-primary hover:opacity-90'}`}>
+                      {confirmText}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    const CustomTooltip = ({ active, payload }) => {
+      if (active && payload && payload.length) {
+        return (
+          <div className="bg-skin-card p-2 border border-skin-border rounded-skin shadow-skin text-sm">
+            <p className="font-medium text-skin-text">{payload[0].name}</p>
+            <p className="text-skin-subtext">¥{payload[0].value.toLocaleString()}</p>
+          </div>
+        );
+      }
+      return null;
+    };
+
+    // ==========================================
+    // 4. Logic & Hooks
+    // ==========================================
+    const updateBillingDates = (subs) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return subs.map(sub => {
+        let billing = new Date(sub.nextBilling);
+        if (isNaN(billing.getTime())) return sub;
+        if (billing >= today) return sub;
+        while (billing < today) {
+          if (sub.cycle === 'monthly') {
+            billing.setMonth(billing.getMonth() + 1);
+          } else {
+            billing.setFullYear(billing.getFullYear() + 1);
+          }
+        }
+        return { ...sub, nextBilling: billing.toISOString().split('T')[0] };
+      });
+    };
+
+    const getDaysUntilBilling = (date) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const billing = new Date(date);
+      billing.setHours(0, 0, 0, 0);
+      return Math.ceil((billing - today) / (1000 * 60 * 60 * 24));
+    };
+
+    const getMonthlyAmount = (sub) => sub.cycle === 'yearly' ? Math.round(sub.amount / 12) : sub.amount;
+    const getYearlyAmount = (sub) => sub.cycle === 'monthly' ? sub.amount * 12 : sub.amount;
+
+    const getCancelScore = (sub) => {
+      const satScore = { '高': 0, '中': 1, '低': 2 };
+      const freqScore = { '毎日': 0, '週1': 1, '月1': 2, 'ほぼ未使用': 3 };
+      return satScore[sub.satisfaction] + freqScore[sub.frequency];
+    };
+
+    const getCancelRecommendation = (score, lang) => {
+      const texts = TRANSLATIONS[lang].rec;
+      if (score >= 4) return { label: texts.cancel, color: 'bg-rose-100 text-rose-600 border-rose-200' };
+      if (score >= 3) return { label: texts.check, color: 'bg-amber-100 text-amber-700 border-amber-200' };
+      return null;
+    };
+
+    const getUrgencyColor = (days) => {
+      if (days < 0) return 'text-skin-subtext';
+      if (days <= 3) return 'text-rose-500 font-bold';
+      if (days <= 7) return 'text-amber-500 font-bold';
+      return 'text-emerald-500';
+    };
+
+    // ==========================================
+    // 5. Main App
+    // ==========================================
+    function App() {
+      const [isLoaded, setIsLoaded] = useState(false);
+      const [subscriptions, setSubscriptions] = useState([]);
+      const [history, setHistory] = useState([]);
+      const [monthlyIncome, setMonthlyIncome] = useState('');
+      const [lang, setLang] = useState('ja'); // 言語設定
+      
+      const [isFormOpen, setIsFormOpen] = useState(false);
+      const [editingId, setEditingId] = useState(null);
+      const [activeTab, setActiveTab] = useState('list');
+      const [sortKey, setSortKey] = useState('date');
+      const [displayCycle, setDisplayCycle] = useState('monthly');
+      const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDanger: false, inputMode: false, inputValue: '' });
+      const [errors, setErrors] = useState({});
+      const [showPaused, setShowPaused] = useState(false);
+      
+      const fileInputRef = useRef(null);
+      const [formData, setFormData] = useState({
+        name: '', amount: '', cycle: 'monthly', nextBilling: '', category: 'その他',
+        color: CATEGORY_COLORS['その他'], satisfaction: '中', frequency: '週1', isActive: true
+      });
+
+      const t = (path) => path.split('.').reduce((obj, key) => obj && obj[key], TRANSLATIONS[lang]) || path;
+      const getDisplayLabel = (key) => TRANSLATIONS[lang].dataMap[key] || key;
+
+      useEffect(() => {
+        const loadData = async () => {
+          try {
+            const savedSubs = await localforage.getItem('subscriptions_pwa');
+            const savedHistory = await localforage.getItem('history_pwa');
+            const savedIncome = await localforage.getItem('monthly_income_pwa');
+            const savedLang = await localforage.getItem('language_pwa');
+
+            if (savedSubs) setSubscriptions(updateBillingDates(savedSubs));
+            else setSubscriptions(updateBillingDates(DEFAULT_SUBSCRIPTIONS));
+            
+            if (savedHistory) setHistory(savedHistory);
+            if (savedIncome) setMonthlyIncome(Number(savedIncome));
+            if (savedLang) setLang(savedLang);
+            
+            setIsLoaded(true);
+          } catch (err) { console.error(err); setIsLoaded(true); }
+        };
+        loadData();
+      }, []);
+
+      useEffect(() => { if (isLoaded) localforage.setItem('subscriptions_pwa', subscriptions); }, [subscriptions, isLoaded]);
+      useEffect(() => { if (isLoaded) localforage.setItem('history_pwa', history); }, [history, isLoaded]);
+      useEffect(() => { if (isLoaded) localforage.setItem('monthly_income_pwa', monthlyIncome); }, [monthlyIncome, isLoaded]);
+      useEffect(() => { if (isLoaded) localforage.setItem('language_pwa', lang); }, [lang, isLoaded]);
+
+      const closeConfirmModal = () => setConfirmModal({ ...confirmModal, isOpen: false });
+
+      const activeSubs = useMemo(() => subscriptions.filter(s => s.isActive), [subscriptions]);
+      const pausedSubs = useMemo(() => subscriptions.filter(s => !s.isActive), [subscriptions]);
+      const totalMonthly = useMemo(() => activeSubs.reduce((sum, sub) => sum + getMonthlyAmount(sub), 0), [activeSubs]);
+      const totalYearly = useMemo(() => activeSubs.reduce((sum, sub) => sum + (sub.cycle === 'yearly' ? sub.amount : sub.amount * 12), 0), [activeSubs]);
+      const potentialSavings = useMemo(() => activeSubs.filter(sub => getCancelScore(sub) >= 4).reduce((sum, sub) => sum + getMonthlyAmount(sub), 0), [activeSubs]);
+
+      const sortedSubs = useMemo(() => {
+        const list = [...activeSubs];
+        if (sortKey === 'price_desc') return list.sort((a, b) => getMonthlyAmount(b) - getMonthlyAmount(a));
+        if (sortKey === 'satisfaction') {
+          const score = { '低': 2, '中': 1, '高': 0 };
+          return list.sort((a, b) => score[b.satisfaction] - score[a.satisfaction]);
+        }
+        return list.sort((a, b) => getDaysUntilBilling(a.nextBilling) - getDaysUntilBilling(b.nextBilling));
+      }, [activeSubs, sortKey]);
+
+      const categoryData = useMemo(() => {
+        const data = CATEGORIES.map((cat, idx) => {
+          const total = activeSubs.filter(s => s.category === cat).reduce((sum, s) => sum + getMonthlyAmount(s), 0);
+          return { name: getDisplayLabel(cat), value: total, color: CATEGORY_COLORS[cat] || '#cbd5e1' };
+        }).filter(d => d.value > 0);
+        return data.length > 0 ? data : [{ name: 'None', value: 1, color: '#f1f5f9' }];
+      }, [activeSubs, lang]);
+
+      const satisfactionData = useMemo(() => {
+        const data = SATISFACTION_LEVELS.map(sat => {
+          const total = activeSubs.filter(s => s.satisfaction === sat).reduce((sum, s) => sum + getMonthlyAmount(s), 0);
+          return { name: getDisplayLabel(sat), value: total, color: SATISFACTION_COLORS[sat] };
+        }).filter(d => d.value > 0);
+        return data.length > 0 ? data : [{ name: 'None', value: 1, color: '#f1f5f9' }];
+      }, [activeSubs, lang]);
+
+      const categoryRanking = useMemo(() => {
+        const ranking = CATEGORIES.map((cat, idx) => {
+          const total = activeSubs.filter(s => s.category === cat).reduce((sum, s) => sum + getMonthlyAmount(s), 0);
+          return { name: getDisplayLabel(cat), value: total, color: CATEGORY_COLORS[cat] }; 
+        }).filter(d => d.value > 0);
+        return ranking.sort((a, b) => b.value - a.value);
+      }, [activeSubs, lang]);
+
+      const matrixData = useMemo(() => {
+        const matrix = {};
+        SATISFACTION_LEVELS.forEach(sat => {
+          matrix[sat] = {};
+          FREQUENCY_LEVELS.forEach(freq => {
+            matrix[sat][freq] = activeSubs.filter(sub => sub.satisfaction === sat && sub.frequency === freq);
+          });
+        });
+        return matrix;
+      }, [activeSubs]);
+
+      const getMatrixCellColor = (sat, freq) => {
+        const score = SATISFACTION_LEVELS.indexOf(sat) + FREQUENCY_LEVELS.indexOf(freq);
+        if (score >= 4) return 'bg-rose-50 border-rose-200 dark:bg-rose-900/30 dark:border-rose-800';
+        if (score >= 3) return 'bg-amber-50 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800';
+        if (score >= 2) return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800';
+        return 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800';
+      };
+
+      const budgetStatus = useMemo(() => {
+        if (!monthlyIncome || monthlyIncome <= 0) return null;
+        const ratio = (totalMonthly / monthlyIncome) * 100;
+        const msgs = TRANSLATIONS[lang].budget;
+        if (ratio < 5) return { status: 'Great!', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/50', bar: 'bg-emerald-500', message: msgs.great };
+        if (ratio < 10) return { status: 'Good', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/50', bar: 'bg-blue-500', message: msgs.good };
+        if (ratio < 15) return { status: 'Warning', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/50', bar: 'bg-amber-500', message: msgs.warning };
+        return { status: 'Danger', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/50', bar: 'bg-rose-500', message: msgs.danger };
+      }, [monthlyIncome, totalMonthly, lang]);
+
+      // --- Handlers ---
+      const handleNameChange = (e) => {
+        const val = e.target.value;
+        const preset = PRESETS[val] || Object.values(PRESETS).find(p => p.name === val);
+        if (preset) {
+          setFormData(prev => ({ ...prev, name: val, amount: preset.amount, category: preset.category, color: preset.color }));
+          setErrors(prev => ({ ...prev, name: null, amount: null }));
+        } else {
+          setFormData(prev => ({ ...prev, name: val }));
+          if(val.trim()) setErrors(prev => ({ ...prev, name: null }));
+        }
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        const newErrors = {};
+        if (!formData.name || !formData.name.trim()) newErrors.name = 'Required';
+        if (!formData.amount || formData.amount <= 0) newErrors.amount = 'Required';
+        if (!formData.nextBilling) newErrors.nextBilling = 'Required';
+        if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+        
+        setErrors({}); 
+        const numAmount = parseInt(formData.amount);
+        const validatedData = { ...formData, amount: numAmount };
+        
+        if (editingId) {
+          setSubscriptions(subscriptions.map(sub => sub.id === editingId ? { ...validatedData, id: editingId } : sub));
+          setEditingId(null);
+        } else {
+          const newSub = { ...validatedData, id: Date.now() };
+          setSubscriptions([...subscriptions, newSub]);
+          setHistory([{ id: Date.now(), subId: newSub.id, subName: newSub.name, action: '新規契約', date: new Date().toISOString().split('T')[0], amount: newSub.amount, cycle: newSub.cycle }, ...history]);
+        }
+        setIsFormOpen(false);
+        setFormData({ name: '', amount: '', cycle: 'monthly', nextBilling: '', category: 'その他', color: '#06b6d4', satisfaction: '中', frequency: '週1', isActive: true });
+      };
+
+      const handleEdit = (sub) => {
+        setFormData(sub);
+        setEditingId(sub.id);
+        setIsFormOpen(true);
+        setErrors({});
+      };
+
+      const handleDelete = (id) => {
+        setConfirmModal({
+          isOpen: true,
+          title: t('modal.deleteTitle'),
+          message: t('modal.deleteMsg'),
+          confirmText: t('modal.deleteBtn'),
+          isDanger: true,
+          onConfirm: () => {
+            setSubscriptions(subscriptions.filter(sub => sub.id !== id));
+            setHistory(history.filter(h => h.subId !== id));
+            closeConfirmModal();
+          }
+        });
+      };
+
+      const toggleStatus = (id) => {
+        const sub = subscriptions.find(s => s.id === id);
+        if (sub.isActive) {
+          setHistory([{ id: Date.now(), subId: id, subName: sub.name, action: '解約', date: new Date().toISOString().split('T')[0], amount: sub.amount, cycle: sub.cycle }, ...history]);
+          setSubscriptions(subscriptions.map(s => s.id === id ? { ...s, isActive: false } : s));
+        } else {
+          setConfirmModal({
+            isOpen: true,
+            title: t('modal.resumeTitle'),
+            message: t('modal.resumeMsg'),
+            confirmText: t('modal.resumeBtn'),
+            inputMode: true,
+            inputValue: sub.amount,
+            inputPlaceholder: t('form.amount'),
+            onConfirm: () => {
+              const inputVal = document.querySelector('input[type="number"]')?.value || sub.amount;
+              const newAmount = parseInt(inputVal);
+              setHistory([{ id: Date.now(), subId: id, subName: sub.name, action: '再契約', date: new Date().toISOString().split('T')[0], amount: newAmount, cycle: sub.cycle }, ...history]);
+              setSubscriptions(subscriptions.map(s => s.id === id ? { ...s, isActive: true, amount: newAmount } : s));
+              closeConfirmModal();
+            }
+          });
+        }
+      };
+
+      const handleExport = () => {
+        const data = { subscriptions, history, exportedAt: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `subs_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      };
+      const handleImportClick = () => fileInputRef.current.click();
+      const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (Array.isArray(data.subscriptions)) {
+              setConfirmModal({
+                isOpen: true,
+                title: t('modal.restoreTitle'),
+                message: t('modal.restoreMsg'),
+                confirmText: t('modal.restoreBtn'),
+                isDanger: true,
+                onConfirm: () => {
+                  setSubscriptions(updateBillingDates(data.subscriptions));
+                  setHistory(data.history || []);
+                  closeConfirmModal();
+                  setActiveTab('list');
+                }
+              });
+            } else { alert('Error: Invalid file'); }
+          } catch (err) { alert('Error: Read failed'); }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      };
+      const handleResetAll = () => {
+        setConfirmModal({
+          isOpen: true, title: t('modal.resetTitle'), message: t('modal.resetMsg'), confirmText: t('modal.resetBtn'), isDanger: true,
+          onConfirm: () => { setSubscriptions(DEFAULT_SUBSCRIPTIONS); setHistory([]); setMonthlyIncome(''); closeConfirmModal(); }
+        });
+      };
+
+      if (!isLoaded) return <div className="min-h-screen bg-skin-base flex items-center justify-center text-skin-subtext">Loading...</div>;
+
+      return (
+        <div className="min-h-screen bg-skin-base text-skin-text font-skin transition-colors duration-300 pb-20">
+          <Modal 
+            isOpen={confirmModal.isOpen} 
+            onClose={closeConfirmModal}
+            title={confirmModal.title} 
+            message={confirmModal.message} 
+            onConfirm={confirmModal.onConfirm} 
+            onCancel={closeConfirmModal} 
+            confirmText={confirmModal.confirmText} 
+            cancelText={t('modal.cancel')}
+            isDanger={confirmModal.isDanger}
+            inputMode={confirmModal.inputMode}
+            inputValue={confirmModal.inputValue}
+            inputPlaceholder={confirmModal.inputPlaceholder}
+            onInputChange={(e) => setConfirmModal(prev => ({...prev, inputValue: e.target.value}))}
+          />
+
+          <Modal 
+            isOpen={isFormOpen} 
+            onClose={() => setIsFormOpen(false)}
+            title={editingId ? t('modal.edit') : t('modal.add')}
+            footer={
+              <button onClick={handleSubmit} className="w-full bg-skin-primary text-skin-primary-fg py-3 rounded-skin text-sm font-bold shadow-sm active:scale-95 transition-transform">
+                {editingId ? t('modal.update') : t('modal.addBtn')}
+              </button>
+            }
+          >
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-skin-subtext mb-1 block">{t('form.name')}</label>
+                <input type="text" list="service-suggestions" placeholder={t('form.placeholderName')} value={formData.name} onChange={handleNameChange} className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-skin-primary transition-all" />
+                <datalist id="service-suggestions">{Object.keys(PRESETS).map(key => <option key={key} value={key} />)}</datalist>
+                {errors.name && <p className="text-rose-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-skin-subtext mb-1 block">{t('form.amount')}</label>
+                  <input type="text" inputMode="numeric" placeholder={t('form.placeholderAmount')} value={formData.amount} onChange={(e) => { const val = e.target.value.replace(/[^\d]/g, ''); setFormData({...formData, amount: val === '' ? '' : parseInt(val) }); }} className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-skin-subtext mb-1 block">{t('form.cycle')}</label>
+                  <select value={formData.cycle} onChange={(e) => setFormData({...formData, cycle: e.target.value})} className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm">
+                    <option value="monthly">{t('cycle.monthly')}</option>
+                    <option value="yearly">{t('cycle.yearly')}</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-skin-subtext mb-1 block">{t('form.category')}</label>
+                <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value, color: CATEGORY_COLORS[e.target.value]})} className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm mb-2">
+                  {CATEGORIES.map(c => <option key={c} value={c}>{getDisplayLabel(c)}</option>)}
+                </select>
+                <div className="flex gap-2 overflow-x-auto py-1 scrollbar-hide">
+                  {COLOR_PALETTE.map(c => (
+                    <button key={c} type="button" onClick={() => setFormData({...formData, color: c})} className={`w-6 h-6 rounded-full border-2 transition-all flex-shrink-0 ${formData.color === c ? 'border-skin-text scale-110' : 'border-transparent'}`} style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-skin-subtext mb-1 block">{t('form.nextBilling')}</label>
+                  <input type="date" value={formData.nextBilling} onChange={(e) => setFormData({...formData, nextBilling: e.target.value})} className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-skin-subtext mb-1 block">{t('form.satisfaction')}</label>
+                  <select value={formData.satisfaction} onChange={(e) => setFormData({...formData, satisfaction: e.target.value})} className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm">
+                    {SATISFACTION_LEVELS.map(s => <option key={s} value={s}>{getDisplayLabel(s)}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-skin-subtext mb-1 block">{t('form.frequency')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {FREQUENCY_LEVELS.map(f => (
+                    <button key={f} type="button" onClick={() => setFormData({...formData, frequency: f})} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${formData.frequency === f ? 'bg-skin-primary text-skin-primary-fg' : 'bg-skin-base border border-skin-border text-skin-subtext'}`}>{getDisplayLabel(f)}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Modal>
+          
+          <div className="max-w-lg mx-auto p-4">
+            {/* Header Area */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">{t('appTitle')}</h1>
+                <p className="text-xs text-skin-subtext font-medium tracking-wide">{t('appDesc')}</p>
+              </div>
+              {activeTab === 'list' && (
+                <button onClick={() => { setIsFormOpen(true); setFormData({ name: '', amount: '', cycle: 'monthly', nextBilling: '', category: 'その他', color: '#06b6d4', satisfaction: '中', frequency: '週1', isActive: true }); setEditingId(null); }} className="w-10 h-10 bg-skin-primary text-skin-primary-fg rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                  <Icons.Plus size={20} />
+                </button>
+              )}
+            </div>
+
+            {/* Top Stats */}
+            {activeTab === 'list' && (
+              <div className="bg-skin-card rounded-skin shadow-skin p-6 mb-6 border border-skin-border relative overflow-hidden">
+                <div className="flex justify-between items-center relative z-10">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-skin-subtext text-xs font-bold uppercase tracking-wider">{t('stats.total')}</span>
+                      <button onClick={() => setDisplayCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly')} className="text-[10px] bg-skin-base px-2 py-0.5 rounded text-skin-subtext font-bold hover:text-skin-text transition-colors">
+                        {displayCycle === 'monthly' ? t('cycle.monthly') : t('cycle.yearly')}
+                      </button>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold font-skin">
+                        {t('currency')}{displayCycle === 'monthly' ? totalMonthly.toLocaleString() : totalYearly.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-skin-subtext mt-2">{t('stats.active')}: {activeSubs.length}{t('stats.items')}</p>
+                  </div>
+                  
+                  {/* Minimal Pie Chart */}
+                  <div className="w-20 h-20">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie 
+                          data={categoryData} 
+                          innerRadius={25} 
+                          outerRadius={35} 
+                          paddingAngle={5} 
+                          dataKey="value" 
+                          stroke="none" 
+                          isAnimationActive={false}
+                        >
+                          {categoryData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Content Area */}
+            <div className="pb-20">
+              {activeTab === 'list' && (
+                <div className="space-y-4">
+                  {/* Sorting */}
+                  <div className="flex justify-end items-center px-1">
+                    <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} className="text-xs bg-transparent border-none text-skin-subtext font-medium focus:ring-0 cursor-pointer">
+                      <option value="date">{t('sort.date')}</option>
+                      <option value="price_desc">{t('sort.price')}</option>
+                      <option value="satisfaction">{t('sort.satisfaction')}</option>
+                    </select>
+                  </div>
+
+                  {sortedSubs.map(sub => {
+                    const days = getDaysUntilBilling(sub.nextBilling);
+                    const rec = getCancelRecommendation(getCancelScore(sub), lang);
+                    return (
+                      <div key={sub.id} className="bg-skin-card rounded-2xl p-4 shadow-sm border border-skin-border hover:border-skin-subtext/30 transition-all group relative overflow-hidden">
+                        {/* Left Color Bar */}
+                        <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: sub.color }}></div>
+                        
+                        <div className="pl-3 flex justify-between items-start">
+                          <div>
+                            <h3 className="font-bold text-base mb-0.5">{sub.name}</h3>
+                            <p className="text-xs text-skin-subtext font-medium flex items-center gap-2">
+                              {t('currency')}{sub.amount.toLocaleString()} <span className="opacity-60">/ {sub.cycle === 'monthly' ? t('cycle.mo') : t('cycle.yr')}</span>
+                              {rec && <span className={`px-1.5 py-0.5 rounded text-[9px] border ${rec.color.replace('bg-', 'border-').replace('text-', 'text-')} bg-transparent`}>{rec.label}</span>}
+                            </p>
+                          </div>
+                          <div className={`text-xs font-bold text-right ${getUrgencyColor(days)}`}>
+                            {days < 0 ? t('card.expired') : days === 0 ? t('card.today') : t('card.daysLeft').replace('{days}', days)}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="pl-3 mt-4 flex justify-between items-center border-t border-skin-border pt-3">
+                          <div className="flex gap-3 text-xs text-skin-subtext">
+                            <span>{getDisplayLabel(sub.category)}</span>
+                            <span>・</span>
+                            <span>{getDisplayLabel(sub.satisfaction)}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => toggleStatus(sub.id)} className="p-1.5 text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"><Icons.Pause size={18} /></button>
+                            <button onClick={() => handleEdit(sub)} className="p-1.5 text-skin-subtext hover:bg-skin-base rounded-full transition-colors"><Icons.Edit2 size={18} /></button>
+                            <button onClick={() => handleDelete(sub.id)} className="p-1.5 text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full transition-colors"><Icons.Trash2 size={18} /></button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Paused Items */}
+                  {pausedSubs.length > 0 && (
+                    <div className="mt-8 pt-4 border-t border-dashed border-skin-border">
+                      <button onClick={() => setShowPaused(!showPaused)} className="flex items-center gap-2 text-xs font-bold text-skin-subtext mb-4 w-full">
+                        {showPaused ? <Icons.ChevronUp size={14} /> : <Icons.ChevronDown size={14} />}
+                        {t('status.paused')} ({pausedSubs.length})
+                      </button>
+                      {showPaused && (
+                        <div className="space-y-2 opacity-60">
+                          {pausedSubs.map(sub => (
+                            <div key={sub.id} className="bg-skin-base rounded-xl p-3 flex justify-between items-center border border-skin-border">
+                              <span className="text-sm font-bold text-skin-subtext">{sub.name}</span>
+                              <div className="flex gap-2">
+                                <button onClick={() => toggleStatus(sub.id)} className="text-emerald-500"><Icons.Play size={18} /></button>
+                                <button onClick={() => handleDelete(sub.id)} className="text-rose-400"><Icons.Trash2 size={18} /></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'analysis' && (
+                <div className="space-y-6">
+                  {/* Analysis Cards */}
+                  <div className="bg-skin-card rounded-2xl p-5 border border-skin-border shadow-skin">
+                    <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
+                      <Icons.Wallet size={18} className="text-emerald-500" /> {t('analysis.budgetCheck')}
+                    </h3>
+                    <div className="mb-4">
+                      <input type="text" inputMode="numeric" placeholder={t('analysis.incomeLabel')} value={monthlyIncome} onChange={(e) => setMonthlyIncome(e.target.value)} className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm font-bold focus:outline-none focus:ring-1 focus:ring-skin-primary" />
+                    </div>
+                    {monthlyIncome > 0 && (
+                      <div className="bg-skin-base rounded-xl p-3">
+                        <div className="flex justify-between text-xs font-bold mb-2">
+                          <span>{t('analysis.ratio')}</span>
+                          <span>{((totalMonthly / parseInt(monthlyIncome)) * 100).toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-skin-border h-2 rounded-full overflow-hidden">
+                          <div className="bg-skin-primary h-full rounded-full" style={{ width: `${Math.min(100, (totalMonthly / parseInt(monthlyIncome)) * 100)}%` }}></div>
+                        </div>
+                        {budgetStatus && (
+                          <p className="text-xs text-skin-subtext mt-2 leading-relaxed">
+                            {budgetStatus.message}<br/>
+                            <span className="opacity-70">{t('budget.hint')} {t('currency')}{(parseInt(monthlyIncome) * 0.05).toLocaleString()}</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Charts Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-skin-card rounded-2xl p-4 border border-skin-border shadow-skin flex flex-col items-center">
+                      <span className="text-xs font-bold text-skin-subtext mb-2">{t('analysis.category')}</span>
+                      <div className="w-full h-24">
+                        <ResponsiveContainer>
+                          <PieChart>
+                            <Pie data={categoryData} innerRadius={20} outerRadius={35} paddingAngle={5} dataKey="value" stroke="none">
+                              {categoryData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                    <div className="bg-skin-card rounded-2xl p-4 border border-skin-border shadow-skin flex flex-col items-center">
+                      <span className="text-xs font-bold text-skin-subtext mb-2">{t('analysis.satisfaction')}</span>
+                      <div className="w-full h-24">
+                        <ResponsiveContainer>
+                          <PieChart>
+                            <Pie data={satisfactionData} innerRadius={20} outerRadius={35} paddingAngle={5} dataKey="value" stroke="none">
+                              {satisfactionData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Spending Ranking */}
+                  <div className="bg-skin-card rounded-xl p-5 shadow-skin border-skin-border">
+                    <h3 className="text-sm font-bold text-skin-text mb-4">{t('analysis.ranking')}</h3>
+                    <div className="space-y-4">
+                      {categoryRanking.map((cat, idx) => (
+                        <div key={cat.name} className="flex items-center gap-3">
+                          <span className={`text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${idx < 3 ? 'bg-skin-primary text-skin-primary-fg' : 'bg-skin-base text-skin-subtext'}`}>
+                            {idx + 1}
+                          </span>
+                          <div className="flex-1">
+                            <div className="flex justify-between text-xs mb-1.5">
+                              <span className="font-bold text-skin-text">{cat.name}</span>
+                              <span className="font-bold">{t('currency')}{cat.value.toLocaleString()}</span>
+                            </div>
+                            <div className="w-full bg-skin-base rounded-full h-2 overflow-hidden">
+                              <div 
+                                className="h-full rounded-full transition-all duration-500" 
+                                style={{ width: `${(cat.value / totalMonthly) * 100}%`, backgroundColor: cat.color }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'matrix' && (
+                <div className="bg-skin-card rounded-2xl p-6 border border-skin-border shadow-skin">
+                  <p className="text-xs text-skin-subtext mb-4 whitespace-pre-wrap">{t('matrix.description')}</p>
+                  <div className="overflow-x-auto -mx-4 px-4">
+                    <table className="w-full min-w-[400px] text-xs">
+                      <thead>
+                        <tr>
+                          <th className="p-2 text-left w-14 text-skin-subtext font-normal">{t('matrix.axisX')}</th>
+                          {FREQUENCY_LEVELS.map(f => <th key={f} className="p-2 text-center font-bold text-skin-text bg-skin-base rounded-t-lg mx-1">{getDisplayLabel(f)}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {SATISFACTION_LEVELS.map(sat => (
+                          <tr key={sat}>
+                            <td className="p-2 font-bold text-skin-text bg-skin-base rounded-l-lg">{getDisplayLabel(sat)}</td>
+                            {FREQUENCY_LEVELS.map(freq => {
+                              const subs = matrixData[sat][freq];
+                              const cellColor = getMatrixCellColor(sat, freq);
+                              return (
+                                <td key={freq} className={`p-1 border-2 border-skin-bg align-top ${cellColor} rounded-lg h-24 w-24 relative`}>
+                                  <div className="absolute inset-0 p-1 overflow-y-auto">
+                                    {subs.map(sub => (
+                                      <div key={sub.id} onClick={() => handleEdit(sub)} className="bg-skin-card/90 backdrop-blur-sm rounded p-1.5 mb-1 shadow-sm border border-skin-border cursor-pointer">
+                                        <p className="font-bold truncate text-[10px] text-skin-text">{sub.name}</p>
+                                        <p className="text-[9px] text-skin-subtext">{t('currency')}{getMonthlyAmount(sub).toLocaleString()}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'history' && (
+                <div className="bg-skin-card rounded-2xl p-6 border border-skin-border shadow-skin">
+                  <h3 className="text-sm font-bold mb-6 flex items-center gap-2"><Icons.History size={18} /> {t('history.title')}</h3>
+                  <div className="space-y-0">
+                    {history.length > 0 ? history.map((h) => (
+                      <div key={h.id} className="timeline-line relative pl-6 pb-6 last:pb-0">
+                        <div className={`absolute left-0 top-1.5 w-3 h-3 rounded-full border-2 border-skin-card ${h.action === '解約' ? 'bg-rose-400' : 'bg-emerald-400'}`}></div>
+                        <p className="text-[10px] text-skin-subtext font-bold mb-0.5">{h.date}</p>
+                        <p className="text-sm font-bold">{h.subName} <span className="text-xs font-normal text-skin-subtext">- {t(`history.labels.${h.action === '解約' ? 'cancel' : h.action === '再契約' ? 'resume' : 'new'}`) || h.action}</span></p>
+                      </div>
+                    )) : <p className="text-center text-xs text-skin-subtext py-4">{t('history.noHistory')}</p>}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'settings' && (
+                <div className="space-y-3">
+                  {/* Language Switch */}
+                  <div className="bg-skin-card rounded-2xl p-4 border border-skin-border shadow-sm flex items-center justify-between">
+                    <h3 className="font-bold text-skin-text text-sm flex items-center gap-3"><Icons.Globe size={18} /> {t('settings.language')}</h3>
+                    <div className="flex gap-2">
+                      <button onClick={() => setLang('ja')} className={`px-3 py-1 text-xs rounded-full border transition-all ${lang === 'ja' ? 'bg-skin-primary text-skin-primary-fg border-skin-primary' : 'bg-skin-base border-skin-border text-skin-subtext'}`}>JP</button>
+                      <button onClick={() => setLang('en')} className={`px-3 py-1 text-xs rounded-full border transition-all ${lang === 'en' ? 'bg-skin-primary text-skin-primary-fg border-skin-primary' : 'bg-skin-base border-skin-border text-skin-subtext'}`}>EN</button>
+                    </div>
+                  </div>
+
+                  <button onClick={handleExport} className="w-full bg-skin-card p-4 rounded-2xl border border-skin-border shadow-sm flex items-center justify-between text-sm font-bold hover:bg-skin-base transition-colors">
+                    <span className="flex items-center gap-3"><Icons.Download size={18} /> {t('settings.backup')}</span>
+                  </button>
+                  
+                  <div className="relative w-full">
+                    <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+                    <button onClick={handleImportClick} className="w-full bg-skin-card p-4 rounded-2xl border border-skin-border shadow-sm flex items-center justify-between text-sm font-bold hover:bg-skin-base transition-colors">
+                      <span className="flex items-center gap-3"><Icons.Upload size={18} /> {t('settings.restore')}</span>
+                    </button>
+                  </div>
+
+                  <button onClick={handleResetAll} className="w-full bg-rose-50 dark:bg-rose-900/20 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/50 flex items-center justify-between text-sm font-bold text-rose-600 hover:opacity-80 transition-colors mt-8">
+                    <span className="flex items-center gap-3"><Icons.Trash2 size={18} /> {t('settings.reset')}</span>
+                  </button>
+                  <p className="text-center text-[10px] text-skin-subtext mt-6">v8.3.0 Improved Meta Tags</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Minimal Bottom Nav (No Text) */}
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-skin-card/90 backdrop-blur-xl border border-skin-border shadow-2xl rounded-full px-6 py-3 flex gap-8 z-30">
+            {[
+              { id: 'list', icon: <Icons.List size={22} /> },
+              { id: 'matrix', icon: <Icons.Matrix size={22} /> },
+              { id: 'analysis', icon: <Icons.Chart size={22} /> },
+              { id: 'history', icon: <Icons.History size={22} /> },
+              { id: 'settings', icon: <Icons.Settings size={22} /> }
+            ].map(tab => (
+              <button 
+                key={tab.id} 
+                onClick={() => setActiveTab(tab.id)} 
+                className={`transition-all duration-300 relative ${activeTab === tab.id ? 'text-skin-text scale-110' : 'text-skin-subtext hover:text-skin-text'}`}
+              >
+                {tab.icon}
+                {activeTab === tab.id && <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-skin-text rounded-full"></span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if ('serviceWorker' in navigator) {
+      if (['http:', 'https:'].includes(window.location.protocol)) {
+        navigator.serviceWorker.register('sw.js').then(registration => console.log('SW registered')).catch(error => console.log('SW registration failed:', error));
+      }
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
