@@ -1,9 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { useApp } from './context/AppContext';
 import { SubscriptionCard } from './components/SubscriptionCard';
 import { SubscriptionForm } from './components/SubscriptionForm';
+import { MatrixView } from './components/MatrixView';
+import { AnalysisView } from './components/AnalysisView';
+import { HistoryView } from './components/HistoryView';
+import { SettingsView } from './components/SettingsView';
 import type { TabType, Subscription } from './types';
+
+const CATEGORIES = ['streaming', 'cloud', 'tool', 'learning', 'health', 'delivery', 'news', 'game', 'other'];
+const CATEGORY_COLORS: Record<string, string> = {
+  streaming: '#f43f5e',
+  cloud: '#0ea5e9',
+  tool: '#3b82f6',
+  learning: '#f59e0b',
+  health: '#10b981',
+  delivery: '#06b6d4',
+  news: '#8b5cf6',
+  game: '#d946ef',
+  other: '#64748b',
+};
 
 // Tab Button Component
 const TabButton: React.FC<{
@@ -36,6 +54,8 @@ const App: React.FC = () => {
     togglePauseSubscription,
     sortMode,
     setSortMode,
+    displayCycle,
+    setDisplayCycle,
   } = useApp();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -59,6 +79,39 @@ const App: React.FC = () => {
   // Filter active subscriptions
   const activeSubscriptions = subscriptions.filter((sub) => !sub.isPaused);
   const pausedSubscriptions = subscriptions.filter((sub) => sub.isPaused);
+
+  // Calculate totals
+  const getMonthlyAmount = (sub: Subscription) =>
+    sub.cycle === 'yearly' ? Math.round(sub.amount / 12) : sub.amount;
+
+  const totalMonthly = useMemo(
+    () => activeSubscriptions.reduce((sum, sub) => sum + getMonthlyAmount(sub), 0),
+    [activeSubscriptions]
+  );
+
+  const totalYearly = useMemo(
+    () =>
+      activeSubscriptions.reduce(
+        (sum, sub) => sum + (sub.cycle === 'monthly' ? sub.amount * 12 : sub.amount),
+        0
+      ),
+    [activeSubscriptions]
+  );
+
+  // Category data for mini pie chart
+  const categoryData = useMemo(() => {
+    const data = CATEGORIES.map((cat) => {
+      const total = activeSubscriptions
+        .filter((s) => s.category === cat)
+        .reduce((sum, s) => sum + getMonthlyAmount(s), 0);
+      return {
+        name: t.categories[cat],
+        value: total,
+        color: CATEGORY_COLORS[cat],
+      };
+    }).filter((d) => d.value > 0);
+    return data.length > 0 ? data : [{ name: 'None', value: 1, color: '#f1f5f9' }];
+  }, [activeSubscriptions, t]);
 
   // Sorting
   const sortedSubscriptions = [...activeSubscriptions].sort((a, b) => {
@@ -141,9 +194,71 @@ const App: React.FC = () => {
           >
             {activeTab === 'list' && (
               <div className="space-y-4">
+                {/* Stats Card */}
+                {activeSubscriptions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-skin-card rounded-3xl shadow-skin p-6 mb-6 border border-skin-border relative overflow-hidden"
+                  >
+                    <div className="flex justify-between items-center relative z-10">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-skin-subtext text-xs font-bold uppercase tracking-wider">
+                            {t.stats.total}
+                          </span>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() =>
+                              setDisplayCycle(displayCycle === 'monthly' ? 'yearly' : 'monthly')
+                            }
+                            className="text-[10px] bg-skin-base px-2 py-0.5 rounded text-skin-subtext font-bold hover:text-skin-text transition-colors"
+                          >
+                            {displayCycle === 'monthly' ? t.cycle.monthly : t.cycle.yearly}
+                          </motion.button>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-bold font-skin">
+                            {t.currency}
+                            {displayCycle === 'monthly'
+                              ? totalMonthly.toLocaleString()
+                              : totalYearly.toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-skin-subtext mt-2">
+                          {t.stats.active}: {activeSubscriptions.length}
+                          {t.stats.items}
+                        </p>
+                      </div>
+
+                      {/* Mini Pie Chart */}
+                      <div className="w-20 h-20">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={categoryData}
+                              innerRadius={25}
+                              outerRadius={35}
+                              paddingAngle={5}
+                              dataKey="value"
+                              stroke="none"
+                              isAnimationActive={false}
+                            >
+                              {categoryData.map((entry, index) => (
+                                <Cell key={index} fill={entry.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Sort Controls */}
                 {activeSubscriptions.length > 0 && (
-                  <div className="flex justify-end">
+                  <div className="flex justify-end items-center px-1">
                     <select
                       value={sortMode}
                       onChange={(e) => setSortMode(e.target.value as any)}
@@ -211,41 +326,13 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'matrix' && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold">{t.tab.matrix}</h2>
-                <div className="bg-skin-card border border-skin-border rounded-3xl p-6 shadow-skin">
-                  <p className="text-skin-subtext">Matrix view - Coming soon</p>
-                </div>
-              </div>
-            )}
+            {activeTab === 'matrix' && <MatrixView />}
 
-            {activeTab === 'analysis' && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold">{t.tab.analysis}</h2>
-                <div className="bg-skin-card border border-skin-border rounded-3xl p-6 shadow-skin">
-                  <p className="text-skin-subtext">Analysis view - Coming soon</p>
-                </div>
-              </div>
-            )}
+            {activeTab === 'analysis' && <AnalysisView />}
 
-            {activeTab === 'history' && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold">{t.tab.history}</h2>
-                <div className="bg-skin-card border border-skin-border rounded-3xl p-6 shadow-skin">
-                  <p className="text-skin-subtext">History view - Coming soon</p>
-                </div>
-              </div>
-            )}
+            {activeTab === 'history' && <HistoryView />}
 
-            {activeTab === 'settings' && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold">{t.tab.settings}</h2>
-                <div className="bg-skin-card border border-skin-border rounded-3xl p-6 shadow-skin">
-                  <p className="text-skin-subtext">Settings view - Coming soon</p>
-                </div>
-              </div>
-            )}
+            {activeTab === 'settings' && <SettingsView />}
           </motion.div>
         </AnimatePresence>
       </main>
