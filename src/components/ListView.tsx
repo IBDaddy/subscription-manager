@@ -121,7 +121,6 @@ export const ListView: React.FC<ListViewProps> = ({ onEdit, onAddNew }) => {
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
-                    isAnimationActive={false}
                   >
                     {categoryData.map((entry, index) => (
                       <Cell key={index} fill={entry.color} />
