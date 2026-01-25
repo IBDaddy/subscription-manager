@@ -174,9 +174,6 @@ export const SettingsView: React.FC = () => {
         </span>
       </motion.button>
 
-      <p className="text-center text-[10px] text-skin-subtext mt-6">
-        Subsco v2.0.0 TypeScript
-      </p>
     </div>
   );
 };
