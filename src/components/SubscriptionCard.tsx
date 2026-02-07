@@ -6,8 +6,8 @@ import type { Subscription } from '../types';
 interface SubscriptionCardProps {
   subscription: Subscription;
   onEdit: (sub: Subscription) => void;
-  onDelete: (id: number) => void;
-  onTogglePause: (id: number) => void;
+  onDelete: (id: string) => void;
+  onTogglePause: (id: string) => void;
 }
 
 const getDaysUntilBilling = (date: string): number => {

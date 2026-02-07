@@ -1,5 +1,5 @@
 export interface Subscription {
-  id: number;
+  id: string;
   name: string;
   amount: number;
   category: string;
@@ -11,7 +11,7 @@ export interface Subscription {
 }
 
 export interface HistoryEntry {
-  id: number;
+  id: string;
   type: 'cancel' | 'resume' | 'new';
   name: string;
   date: string;
@@ -49,6 +49,8 @@ export interface Translations {
     active: string;
     savings: string;
     items: string;
+    noSubscriptions: string;
+    addFirst: string;
   };
   sort: {
     date: string;
@@ -96,6 +98,7 @@ export interface Translations {
     restore: string;
     reset: string;
     resetWarning: string;
+    importError: string;
   };
   form: {
     title: string;

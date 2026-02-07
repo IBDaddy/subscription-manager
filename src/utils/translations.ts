@@ -7,7 +7,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     currency: '¥',
     cycle: { monthly: '月額', yearly: '年額', mo: '月', yr: '年' },
     tab: { list: '一覧', matrix: '分析', analysis: 'グラフ', history: '履歴', settings: '設定' },
-    stats: { total: '合計支出', active: '契約中', savings: '削減余地', items: '件' },
+    stats: { total: '合計支出', active: '契約中', savings: '削減余地', items: '件', noSubscriptions: 'サブスクリプションがありません', addFirst: '最初のサブスクを追加' },
     sort: { date: '更新が近い順', price: '金額が高い順', satisfaction: '満足度が低い順' },
     card: { expired: '期限切れ', today: '今日請求', daysLeft: 'あと{days}日' },
     status: { paused: '停止中', resume: '再開', stop: '停止' },
@@ -20,7 +20,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     settings: {
       title: '設定', language: '言語', darkMode: 'ダークモード',
       dataManagement: 'データ管理', backup: 'バックアップ', restore: '復元', reset: 'リセット',
-      resetWarning: 'すべてのデータが削除されます。本当によろしいですか？'
+      resetWarning: 'すべてのデータが削除されます。本当によろしいですか？',
+      importError: 'データの復元に失敗しました'
     },
     form: {
       title: '新規サービス', editTitle: '編集', name: 'サービス名', amount: '月額料金', category: 'カテゴリ',
@@ -41,7 +42,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     currency: '$',
     cycle: { monthly: 'Monthly', yearly: 'Yearly', mo: '/mo', yr: '/yr' },
     tab: { list: 'List', matrix: 'Matrix', analysis: 'Analysis', history: 'History', settings: 'Settings' },
-    stats: { total: 'Total Cost', active: 'Active', savings: 'Potential Savings', items: 'items' },
+    stats: { total: 'Total Cost', active: 'Active', savings: 'Potential Savings', items: 'items', noSubscriptions: 'No subscriptions yet', addFirst: 'Add your first subscription' },
     sort: { date: 'Next Billing', price: 'Price (High to Low)', satisfaction: 'Satisfaction (Low to High)' },
     card: { expired: 'Expired', today: 'Due Today', daysLeft: '{days}d left' },
     status: { paused: 'Paused', resume: 'Resume', stop: 'Pause' },
@@ -54,7 +55,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     settings: {
       title: 'Settings', language: 'Language', darkMode: 'Dark Mode',
       dataManagement: 'Data Management', backup: 'Backup', restore: 'Restore', reset: 'Reset',
-      resetWarning: 'All data will be deleted. Are you sure?'
+      resetWarning: 'All data will be deleted. Are you sure?',
+      importError: 'Failed to restore data'
     },
     form: {
       title: 'New Service', editTitle: 'Edit', name: 'Service Name', amount: 'Monthly Cost', category: 'Category',
