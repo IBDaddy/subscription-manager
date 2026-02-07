@@ -11,7 +11,7 @@ interface SubscriptionFormProps {
   subscription?: Subscription | null;
 }
 
-const CATEGORIES = ['streaming', 'cloud', 'tool', 'learning', 'health', 'delivery', 'news', 'game', 'other'];
+import { CATEGORIES } from '../constants';
 
 export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   isOpen,
@@ -24,7 +24,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   const [formData, setFormData] = useState({
     name: '',
     amount: 0,
-    category: 'other' as const,
+    category: 'other' as string,
     cycle: 'monthly' as 'monthly' | 'yearly',
     nextBillingDate: '',
     satisfaction: 3,
@@ -36,7 +36,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
       setFormData({
         name: subscription.name,
         amount: subscription.amount,
-        category: subscription.category as any,
+        category: subscription.category,
         cycle: subscription.cycle,
         nextBillingDate: subscription.nextBillingDate,
         satisfaction: subscription.satisfaction,
@@ -158,7 +158,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
           <select
             value={formData.category}
             onChange={(e) =>
-              setFormData({ ...formData, category: e.target.value as any })
+              setFormData({ ...formData, category: e.target.value })
             }
             className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-skin-primary"
           >

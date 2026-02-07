@@ -2,19 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { useApp } from '../context/AppContext';
-
-const CATEGORIES = ['streaming', 'cloud', 'tool', 'learning', 'health', 'delivery', 'news', 'game', 'other'];
-const CATEGORY_COLORS: Record<string, string> = {
-  streaming: '#f43f5e',
-  cloud: '#0ea5e9',
-  tool: '#3b82f6',
-  learning: '#f59e0b',
-  health: '#10b981',
-  delivery: '#06b6d4',
-  news: '#8b5cf6',
-  game: '#d946ef',
-  other: '#64748b',
-};
+import { CATEGORIES, CATEGORY_COLORS } from '../constants';
 
 const SATISFACTION_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#10b981'];
 

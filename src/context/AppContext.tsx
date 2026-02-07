@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import localforage from 'localforage';
 import type { Subscription, HistoryEntry, Language, TabType, SortMode, DisplayCycle, Translations } from '../types';
 import { TRANSLATIONS } from '../utils/translations';
+import { validateImportData } from '../utils/validation';
 
 interface AppContextType {
   // Data
@@ -19,9 +20,9 @@ interface AppContextType {
 
   // Actions
   addSubscription: (subscription: Omit<Subscription, 'id'>) => void;
-  updateSubscription: (id: number, subscription: Partial<Subscription>) => void;
-  deleteSubscription: (id: number) => void;
-  togglePauseSubscription: (id: number) => void;
+  updateSubscription: (id: string, subscription: Partial<Subscription>) => void;
+  deleteSubscription: (id: string) => void;
+  togglePauseSubscription: (id: string) => void;
 
   addHistory: (entry: Omit<HistoryEntry, 'id'>) => void;
 
@@ -135,7 +136,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const addSubscription = (sub: Omit<Subscription, 'id'>) => {
     const newSub: Subscription = {
       ...sub,
-      id: Date.now() + Math.random(),
+      id: crypto.randomUUID(),
     };
     setSubscriptions(prev => [...prev, newSub]);
 
@@ -148,13 +149,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     });
   };
 
-  const updateSubscription = (id: number, updates: Partial<Subscription>) => {
+  const updateSubscription = (id: string, updates: Partial<Subscription>) => {
     setSubscriptions(prev =>
       prev.map(sub => (sub.id === id ? { ...sub, ...updates } : sub))
     );
   };
 
-  const deleteSubscription = (id: number) => {
+  const deleteSubscription = (id: string) => {
     const sub = subscriptions.find(s => s.id === id);
     if (sub) {
       setSubscriptions(prev => prev.filter(s => s.id !== id));
@@ -168,7 +169,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  const togglePauseSubscription = (id: number) => {
+  const togglePauseSubscription = (id: string) => {
     const sub = subscriptions.find(s => s.id === id);
     if (sub) {
       const newPausedState = !sub.isPaused;
@@ -191,7 +192,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const addHistory = (entry: Omit<HistoryEntry, 'id'>) => {
     const newEntry: HistoryEntry = {
       ...entry,
-      id: Date.now() + Math.random(),
+      id: crypto.randomUUID(),
     };
     setHistory(prev => [newEntry, ...prev]);
   };
@@ -229,17 +230,26 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const importData = (jsonString: string) => {
-    try {
-      const data = JSON.parse(jsonString);
-      if (data.subscriptions) setSubscriptions(data.subscriptions);
-      if (data.history) setHistory(data.history);
-      if (data.monthlyIncome) setMonthlyIncomeState(data.monthlyIncome);
-      if (data.language) setLanguageState(data.language);
-      if (data.isDarkMode !== undefined) setIsDarkMode(data.isDarkMode);
-    } catch (err) {
-      console.error('Failed to import data:', err);
-      alert('データの復元に失敗しました');
+    const result = validateImportData(jsonString);
+
+    if (!result.success || !result.data) {
+      alert(TRANSLATIONS[language].settings.importError ?? 'Import failed');
+      return;
     }
+
+    if (result.errors.length > 0) {
+      const skipped = result.errors.length;
+      const msg = language === 'ja'
+        ? `${skipped}件のデータをスキップしました（形式不正）`
+        : `Skipped ${skipped} invalid item(s)`;
+      alert(msg);
+    }
+
+    setSubscriptions(result.data.subscriptions);
+    setHistory(result.data.history);
+    setMonthlyIncomeState(result.data.monthlyIncome);
+    if (result.data.language) setLanguageState(result.data.language);
+    if (result.data.isDarkMode !== undefined) setIsDarkMode(result.data.isDarkMode);
   };
 
   const resetAllData = () => {
