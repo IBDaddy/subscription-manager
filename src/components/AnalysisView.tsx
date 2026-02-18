@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { useApp } from '../context/AppContext';
-import { CATEGORIES, CATEGORY_COLORS } from '../constants';
+import { CATEGORIES, CATEGORY_COLORS, PAYMENT_METHODS, PAYMENT_METHOD_COLORS } from '../constants';
 
 const SATISFACTION_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#10b981'];
 
@@ -66,6 +66,31 @@ export const AnalysisView: React.FC = () => {
       .sort((a, b) => b.value - a.value);
     return ranking;
   }, [activeSubscriptions, t]);
+
+  // Payment method breakdown (yearly)
+  const paymentMethodData = useMemo(() => {
+    const getYearlyAmount = (sub: typeof subscriptions[0]) =>
+      sub.cycle === 'monthly' ? sub.amount * 12 : sub.amount;
+
+    return PAYMENT_METHODS.map((method) => {
+      const total = activeSubscriptions
+        .filter((s) => (s.paymentMethod || 'credit_card') === method)
+        .reduce((sum, s) => sum + getYearlyAmount(s), 0);
+      return {
+        key: method,
+        name: t.paymentMethods[method],
+        value: total,
+        color: PAYMENT_METHOD_COLORS[method],
+      };
+    })
+      .filter((d) => d.value > 0)
+      .sort((a, b) => b.value - a.value);
+  }, [activeSubscriptions, t]);
+
+  const totalYearlyForPayment = useMemo(
+    () => paymentMethodData.reduce((sum, d) => sum + d.value, 0),
+    [paymentMethodData]
+  );
 
   // Budget status
   const budgetStatus = useMemo(() => {
@@ -261,6 +286,52 @@ export const AnalysisView: React.FC = () => {
           ))}
         </div>
       </motion.div>
+      {/* Payment Method Breakdown */}
+      {paymentMethodData.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-skin-card rounded-3xl p-5 shadow-skin border border-skin-border"
+        >
+          <h3 className="text-sm font-bold text-skin-text mb-4">
+            💳 {t.analysis.byPayment}
+          </h3>
+          <div className="space-y-4">
+            {paymentMethodData.map((pm, idx) => (
+              <div key={pm.key} className="flex items-center gap-3">
+                <div
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: pm.color }}
+                />
+                <div className="flex-1">
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="font-bold text-skin-text">{pm.name}</span>
+                    <span className="font-bold">
+                      {t.currency}
+                      {pm.value.toLocaleString()}
+                      <span className="text-skin-subtext font-normal"> /{t.cycle.yr}</span>
+                    </span>
+                  </div>
+                  <div className="w-full bg-skin-base rounded-full h-2 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(pm.value / totalYearlyForPayment) * 100}%` }}
+                      transition={{ delay: 0.5 + idx * 0.1, duration: 0.5 }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: pm.color }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div className="pt-3 border-t border-skin-border flex justify-between text-xs font-bold">
+              <span className="text-skin-subtext">{t.stats.total}</span>
+              <span>{t.currency}{totalYearlyForPayment.toLocaleString()}/{t.cycle.yr}</span>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };

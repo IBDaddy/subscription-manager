@@ -14,7 +14,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     matrix: { axisX: '満足度', axisY: '頻度', description: '右下にあるサービスほど\n見直しの優先度が高いです' },
     analysis: {
       budgetCheck: '家計負担率チェック', incomeLabel: '手取り月収を入力', ratio: '固定費率',
-      category: 'カテゴリ別', satisfaction: '満足度別', ranking: '支出ランキング (カテゴリ)'
+      category: 'カテゴリ別', satisfaction: '満足度別', ranking: '支出ランキング (カテゴリ)',
+      byPayment: '支払い方法別 (年額)'
     },
     history: { title: '活動履歴', noHistory: '履歴はありません', labels: { cancel: '解約', resume: '再契約', new: '新規契約' } },
     settings: {
@@ -29,7 +30,12 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       nextBilling: '次回請求日',
       satisfaction: { label: '満足度', levels: ['不満', 'やや不満', '普通', '満足', '大満足'] },
       frequency: { label: '使用頻度', levels: ['ほぼ未使用', 'たまに', '週1～2', '毎日', 'ヘビー'] },
+      paymentMethod: '支払い方法',
       save: '保存', cancel: 'キャンセル'
+    },
+    paymentMethods: {
+      credit_card: 'クレジットカード', google_play: 'Google Play', apple_store: 'App Store',
+      cash: '現金', bank_transfer: '銀行振込', other: 'その他'
     },
     categories: {
       streaming: '動画/音楽', cloud: 'クラウド', tool: '仕事ツール', learning: '学習/資格',
@@ -49,7 +55,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     matrix: { axisX: 'Satisfaction', axisY: 'Frequency', description: 'Services in the bottom-right\nshould be reviewed first' },
     analysis: {
       budgetCheck: 'Budget Impact Check', incomeLabel: 'Monthly Income', ratio: 'Fixed Cost Ratio',
-      category: 'By Category', satisfaction: 'By Satisfaction', ranking: 'Spending Ranking (Category)'
+      category: 'By Category', satisfaction: 'By Satisfaction', ranking: 'Spending Ranking (Category)',
+      byPayment: 'By Payment Method (Yearly)'
     },
     history: { title: 'Activity History', noHistory: 'No history yet', labels: { cancel: 'Cancelled', resume: 'Resumed', new: 'New' } },
     settings: {
@@ -64,7 +71,12 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       nextBilling: 'Next Billing Date',
       satisfaction: { label: 'Satisfaction', levels: ['Poor', 'Fair', 'Good', 'Great', 'Excellent'] },
       frequency: { label: 'Usage Frequency', levels: ['Rarely', 'Sometimes', '1-2x/week', 'Daily', 'Heavy'] },
+      paymentMethod: 'Payment Method',
       save: 'Save', cancel: 'Cancel'
+    },
+    paymentMethods: {
+      credit_card: 'Credit Card', google_play: 'Google Play', apple_store: 'App Store',
+      cash: 'Cash', bank_transfer: 'Bank Transfer', other: 'Other'
     },
     categories: {
       streaming: 'Video/Music', cloud: 'Cloud', tool: 'Tools', learning: 'Learning',

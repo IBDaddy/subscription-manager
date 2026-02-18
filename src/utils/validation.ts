@@ -1,5 +1,5 @@
 import type { Subscription, HistoryEntry } from '../types';
-import { CATEGORIES } from '../constants';
+import { CATEGORIES, PAYMENT_METHODS } from '../constants';
 
 function isValidSubscription(obj: unknown): obj is Subscription {
   if (typeof obj !== 'object' || obj === null) return false;
@@ -14,7 +14,8 @@ function isValidSubscription(obj: unknown): obj is Subscription {
     typeof s.nextBillingDate === 'string' && !isNaN(Date.parse(s.nextBillingDate)) &&
     typeof s.satisfaction === 'number' && s.satisfaction >= 1 && s.satisfaction <= 5 &&
     typeof s.frequency === 'number' && s.frequency >= 1 && s.frequency <= 5 &&
-    typeof s.isPaused === 'boolean'
+    typeof s.isPaused === 'boolean' &&
+    (s.paymentMethod === undefined || (typeof s.paymentMethod === 'string' && (PAYMENT_METHODS as readonly string[]).includes(s.paymentMethod)))
   );
 }
 
@@ -70,7 +71,11 @@ export function validateImportData(jsonString: string): ImportValidationResult {
   if (Array.isArray(data.subscriptions)) {
     data.subscriptions.forEach((item, i) => {
       if (isValidSubscription(item)) {
-        subscriptions.push(normalizeId(item as Subscription & { id: string | number }));
+        const normalized = normalizeId(item as Subscription & { id: string | number });
+        if (!normalized.paymentMethod) {
+          normalized.paymentMethod = 'credit_card';
+        }
+        subscriptions.push(normalized);
       } else {
         errors.push(`subscriptions[${i}]: invalid`);
       }

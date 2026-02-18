@@ -11,7 +11,7 @@ interface SubscriptionFormProps {
   subscription?: Subscription | null;
 }
 
-import { CATEGORIES } from '../constants';
+import { CATEGORIES, PAYMENT_METHODS } from '../constants';
 
 export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
   isOpen,
@@ -26,6 +26,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
     amount: 0,
     category: 'other' as string,
     cycle: 'monthly' as 'monthly' | 'yearly',
+    paymentMethod: 'credit_card' as string,
     nextBillingDate: '',
     satisfaction: 3,
     frequency: 3,
@@ -38,6 +39,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
         amount: subscription.amount,
         category: subscription.category,
         cycle: subscription.cycle,
+        paymentMethod: subscription.paymentMethod || 'credit_card',
         nextBillingDate: subscription.nextBillingDate,
         satisfaction: subscription.satisfaction,
         frequency: subscription.frequency,
@@ -51,6 +53,7 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
         amount: 0,
         category: 'other',
         cycle: 'monthly',
+        paymentMethod: 'credit_card',
         nextBillingDate: tomorrow.toISOString().split('T')[0],
         satisfaction: 3,
         frequency: 3,
@@ -165,6 +168,26 @@ export const SubscriptionForm: React.FC<SubscriptionFormProps> = ({
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
                 {t.categories[cat]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Payment Method */}
+        <div>
+          <label className="text-xs font-bold text-skin-subtext mb-1 block">
+            {t.form.paymentMethod}
+          </label>
+          <select
+            value={formData.paymentMethod}
+            onChange={(e) =>
+              setFormData({ ...formData, paymentMethod: e.target.value })
+            }
+            className="w-full px-3 py-2 bg-skin-base border border-skin-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-skin-primary"
+          >
+            {PAYMENT_METHODS.map((method) => (
+              <option key={method} value={method}>
+                {t.paymentMethods[method]}
               </option>
             ))}
           </select>

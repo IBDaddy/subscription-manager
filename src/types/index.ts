@@ -4,6 +4,7 @@ export interface Subscription {
   amount: number;
   category: string;
   cycle: 'monthly' | 'yearly';
+  paymentMethod: string;
   nextBillingDate: string;
   satisfaction: number;
   frequency: number;
@@ -79,6 +80,7 @@ export interface Translations {
     category: string;
     satisfaction: string;
     ranking: string;
+    byPayment: string;
   };
   history: {
     title: string;
@@ -120,8 +122,10 @@ export interface Translations {
       label: string;
       levels: string[];
     };
+    paymentMethod: string;
     save: string;
     cancel: string;
   };
+  paymentMethods: Record<string, string>;
   categories: Record<string, string>;
 }
