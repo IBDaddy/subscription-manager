@@ -106,12 +106,20 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         transition={{ delay: 0.2 }}
         className="pl-3 mt-4 flex justify-between items-center border-t border-skin-border pt-3"
       >
-        <div className="flex gap-3 text-xs text-skin-subtext">
+        <div className="flex gap-2 text-xs text-skin-subtext flex-wrap items-center">
           <span>{subscription.category}</span>
           <span>·</span>
           <span>
             {t.form.satisfaction.levels[subscription.satisfaction - 1]}
           </span>
+          {subscription.paymentMethod && (
+            <>
+              <span>·</span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] border border-skin-border bg-skin-base">
+                {t.paymentMethods[subscription.paymentMethod] || subscription.paymentMethod}
+              </span>
+            </>
+          )}
         </div>
 
         <div className="flex gap-2">
